@@ -1,0 +1,30 @@
+version: "3.7"
+
+networks:
+  reverse-proxy:
+    external: true
+    name: reverse-proxy
+  postgres:
+    external: true
+    name: postgres
+  redis:
+    external: true
+    name: redis
+
+services:
+  fireflyiii:
+    image: jc5x/firefly-iii:latest
+    volumes:
+      - ./volumes/upload:/var/www/html/storage/upload
+    env_file:
+      - .env
+    networks:
+      - postgres
+      - redis
+      - reverse-proxy
+
+  cron:
+    image: alpine
+    env_file:
+      - .env
+    command: sh -c "echo \"0 3 * * * wget ${APP_URL}/cron/run/${CRON_TOKEN}\" | crontab - && crond -f -L /dev/stdout"
